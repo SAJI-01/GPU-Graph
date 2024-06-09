@@ -8,7 +8,7 @@ Shader "Graph/Point URP GPU"
     {
         CGPROGRAM
 		#pragma surface ConfigureSurface Standard fullforwardshadows addshadow
-		#pragma instancing_options assumeuniformscaling procedural:ConfigureProcedural
+		#pragma instancing_options assumeuniformscaling procedural:Procedural
 		#pragma editor_sync_compilation
 		#pragma target 4.5
 
@@ -34,8 +34,8 @@ Shader "Graph/Point URP GPU"
 												  All other components are zero for us.   |  0    0    0	  1 | */	
 
 				unity_ObjectToWorld = 0.0;
-				unity_ObjectToWorld._m03_m13_m23_m33 = float4(position, 1.0);
-				unity_ObjectToWorld._m00_m11_m22 = _Step;
+				unity_ObjectToWorld._m03_m13_m23_m33 = float4(position, 1.0); // Set the position of the object to the position of the current instance.
+				unity_ObjectToWorld._m00_m11_m22 = _Step; // Set the scale of the object to the step value.
 			#endif
 		}
         
