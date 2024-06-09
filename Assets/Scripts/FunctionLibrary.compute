@@ -1,73 +1,56 @@
-#pragma kernel MobiusStripKernel // index 0
-#pragma kernel MobiusStripToMultiWaveKernel
-#pragma kernel MobiusStripToSphericalHarmonicsKernel
-#pragma kernel MobiusStripToDNAHelixKernel
-#pragma kernel MobiusStripToTorusKernel
-#pragma kernel MobiusStripToTorusKnotKernel
+#pragma kernel WaveKernel // index 0
+#pragma kernel WaveToMultiWaveKernel
+#pragma kernel WaveToRippleKernel
+#pragma kernel WaveToSphereKernel
+#pragma kernel WaveToTorusKernel
 
-#pragma kernel MultiWaveToMobiusStripKernel
+#pragma kernel MultiWaveToWaveKernel
 #pragma kernel MultiWaveKernel // index 1
-#pragma kernel MultiWaveToSphericalHarmonicsKernel
-#pragma kernel MultiWaveToDNAHelixKernel
+#pragma kernel MultiWaveToRippleKernel
+#pragma kernel MultiWaveToSphereKernel
 #pragma kernel MultiWaveToTorusKernel
-#pragma kernel MultiWaveToTorusKnotKernel
 
-#pragma kernel SphericalHarmonicsToMobiusStripKernel
-#pragma kernel SphericalHarmonicsToMultiWaveKernel
-#pragma kernel SphericalHarmonicsKernel // index 2
-#pragma kernel SphericalHarmonicsToDNAHelixKernel
-#pragma kernel SphericalHarmonicsToTorusKernel
-#pragma kernel SphericalHarmonicsToTorusKnotKernel
+#pragma kernel RippleToWaveKernel
+#pragma kernel RippleToMultiWaveKernel
+#pragma kernel RippleKernel // index 2
+#pragma kernel RippleToSphereKernel
+#pragma kernel RippleToTorusKernel
 
-#pragma kernel DNAHelixToMobiusStripKernel
-#pragma kernel DNAHelixToMultiWaveKernel
-#pragma kernel DNAHelixToSphericalHarmonicsKernel
-#pragma kernel DNAHelixKernel // index 3
-#pragma kernel DNAHelixToTorusKernel
-#pragma kernel DNAHelixToTorusKnotKernel
+#pragma kernel SphereToWaveKernel
+#pragma kernel SphereToMultiWaveKernel
+#pragma kernel SphereToRippleKernel
+#pragma kernel SphereKernel // index 3
+#pragma kernel SphereToTorusKernel
 
-#pragma kernel TorusToMobiusStripKernel
+#pragma kernel TorusToWaveKernel
 #pragma kernel TorusToMultiWaveKernel
-#pragma kernel TorusToSphericalHarmonicsKernel
-#pragma kernel TorusToDNAHelixKernel
+#pragma kernel TorusToRippleKernel
+#pragma kernel TorusToSphereKernel
 #pragma kernel TorusKernel // index 4
-#pragma kernel TorusToTorusKnotKernel
 
-#pragma kernel TorusKnotToMobiusStripKernel
-#pragma kernel TorusKnotToMultiWaveKernel
-#pragma kernel TorusKnotToSphericalHarmonicsKernel
-#pragma kernel TorusKnotToDNAHelixKernel
-#pragma kernel TorusKnotToTorusKernel
-#pragma kernel TorusKnotKernel // index 5
+RWStructuredBuffer<float3> _Positions;
 
-RWStructuredBuffer<float3> _Positions; //read and write buffer for positions
-uint _Resolution; // Number of vertices / Cubes in the mesh
+uint _Resolution;
 
-// Custom properties
 float _Step, _Time, _TransitionProgress;
 
 float2 GetUV (uint3 id) {
-	return (id.xy + 0.5) * _Step - 1.0; // Normalize to [-1, 1]
+	return (id.xy + 0.5) * _Step - 1.0;
 }
 
 void SetPosition (uint3 id, float3 position) {
-	
-	if (id.x < _Resolution && id.y < _Resolution) // Check if the id is within the bounds of the buffer
-	{
-		_Positions[id.x + id.y * _Resolution] = position; // Write the position to the buffer
+	if (id.x < _Resolution && id.y < _Resolution) {
+		_Positions[id.x + id.y * _Resolution] = position;
 	}
 }
 
-#define PI 3.14159265358979323846 // Define PI
-#define TAU 6.28318530717958647692
+#define PI 3.14159265358979323846
 
-float3 MobiusStrip(float u, float v, float t)
-{
-	float r = 1.0 + 0.5 * v * cos(0.5 * PI * u);
+float3 Wave (float u, float v, float t) {
 	float3 p;
-	p.x = r * cos(PI * u + 0.5 * t);
-	p.y = r * sin(PI * u + 0.5 * t);
-	p.z = v * sin(0.5 * PI * u + t);
+	p.x = u;
+	p.y = sin(PI * (u + v + t));
+	p.z = v;
 	return p;
 }
 
@@ -82,48 +65,23 @@ float3 MultiWave (float u, float v, float t) {
 	return p;
 }
 
-float3 SphericalHarmonics(float u, float v, float t)
-{
-	float theta = PI * u;
-	float phi = 2 * PI * v;
-	float r = 0.5 + 0.5 * sin(4 * phi + t) * cos(2 * theta + t);
-        
+float3 Ripple (float u, float v, float t) {
+	float d = sqrt(u * u + v * v);
 	float3 p;
-	p.x = r * sin(theta) * cos(phi);
-	p.y = r * sin(theta) * sin(phi);
-	p.z = r * cos(theta);
+	p.x = u;
+	p.y = sin(PI * (4.0 * d - t));
+	p.y /= 1.0 + 10.0 * d;
+	p.z = v;
 	return p;
 }
 
-float3 DNAHelix(float u, float v, float t)
-{
-	const float radius = 0.2;
-	const float height = u * 2.0;
-	const float twists = 5.0;
-
-	const float angle1 = twists * PI * u + PI;
-	const float angle2 = twists * PI * (u + 0.5) + PI;
-	
-	float3 p1;
-	p1.x = radius * cos(angle1);
-	p1.y = height ;
-	p1.z = radius * sin(angle1);
-	
-	float3 p2;
-	p2.x = radius * cos(angle2);
-	p2.y = height; 
-	p2.z = radius * sin(angle2);
-	
-	float3 p = lerp(p1, p2, v);
-	
-	const float rotationSpeed = 1.5;
-	const float angle = rotationSpeed * t;
-	const float3x3 rotationMatrix = float3x3(
-		cos(angle), 0, sin(angle),
-		     0,              1,              0,
-		-sin(angle), 0, cos(angle)
-	);
-	p = mul(rotationMatrix, p);
+float3 Sphere (float u, float v, float t) {
+	float r = 0.9 + 0.1 * sin(PI * (12.0 * u + 8.0 * v + t));
+	float s = r * cos(0.5 * PI * v);
+	float3 p;
+	p.x = s * sin(PI * u);
+	p.y = r * sin(0.5 * PI * v);
+	p.z = s * cos(PI * u);
 	return p;
 }
 
@@ -131,26 +89,12 @@ float3 Torus (float u, float v, float t) {
 	float r1 = 0.7 + 0.1 * sin(PI * (8.0 * u + 0.5 * t));
 	float r2 = 0.15 + 0.05 * sin(PI * (16.0 * u + 8.0 * v + 3.0 * t));
 	float s = r2 * cos(PI * v) + r1;
-	
 	float3 p;
 	p.x = s * sin(PI * u);
 	p.y = r2 * sin(PI * v);
 	p.z = s * cos(PI * u);
 	return p;
 }
-
-
-float3 TorusKnot(float u, float v, float t){
-	float r1 = 1.0 + 0.3 * sin(PI * (6.0 * u + 0.5 * t));
-	float r2 = 0.2 + 0.1 * sin(PI * (12.0 * v + t));
-	float angle = 2.0 * PI * u;
-	float3 p;
-	p.x = (r1 + r2 * cos(2.0 * PI * v)) * cos(angle);
-	p.y = (r1 + r2 * cos(2.0 * PI * v)) * sin(angle);
-	p.z = r2 * sin(2.0 * PI * v);
-	return p;
-}
-
 
 #define KERNEL_FUNCTION(function) \
 	[numthreads(8, 8, 1)] \
@@ -170,46 +114,33 @@ float3 TorusKnot(float u, float v, float t){
 		SetPosition(id, position); \
 	}
 
-KERNEL_FUNCTION(MobiusStrip)
+KERNEL_FUNCTION(Wave)
 KERNEL_FUNCTION(MultiWave)
-KERNEL_FUNCTION(SphericalHarmonics)
-KERNEL_FUNCTION(DNAHelix)
+KERNEL_FUNCTION(Ripple)
+KERNEL_FUNCTION(Sphere)
 KERNEL_FUNCTION(Torus)
-KERNEL_FUNCTION(TorusKnot)
 
-KERNEL_MORPH_FUNCTION(MobiusStrip, MultiWave);
-KERNEL_MORPH_FUNCTION(MobiusStrip, SphericalHarmonics);
-KERNEL_MORPH_FUNCTION(MobiusStrip, DNAHelix);
-KERNEL_MORPH_FUNCTION(MobiusStrip, Torus);
-KERNEL_MORPH_FUNCTION(MobiusStrip, TorusKnot);
+KERNEL_MORPH_FUNCTION(Wave, MultiWave);
+KERNEL_MORPH_FUNCTION(Wave, Ripple);
+KERNEL_MORPH_FUNCTION(Wave, Sphere);
+KERNEL_MORPH_FUNCTION(Wave, Torus);
 
-
-KERNEL_MORPH_FUNCTION(MultiWave, MobiusStrip);
-KERNEL_MORPH_FUNCTION(MultiWave, SphericalHarmonics);
-KERNEL_MORPH_FUNCTION(MultiWave, DNAHelix);
+KERNEL_MORPH_FUNCTION(MultiWave, Wave);
+KERNEL_MORPH_FUNCTION(MultiWave, Ripple);
+KERNEL_MORPH_FUNCTION(MultiWave, Sphere);
 KERNEL_MORPH_FUNCTION(MultiWave, Torus);
-KERNEL_MORPH_FUNCTION(MultiWave, TorusKnot);
 
-KERNEL_MORPH_FUNCTION(SphericalHarmonics, MobiusStrip);
-KERNEL_MORPH_FUNCTION(SphericalHarmonics, MultiWave);
-KERNEL_MORPH_FUNCTION(SphericalHarmonics, DNAHelix);
-KERNEL_MORPH_FUNCTION(SphericalHarmonics, Torus);
-KERNEL_MORPH_FUNCTION(SphericalHarmonics, TorusKnot);
+KERNEL_MORPH_FUNCTION(Ripple, Wave);
+KERNEL_MORPH_FUNCTION(Ripple, MultiWave);
+KERNEL_MORPH_FUNCTION(Ripple, Sphere);
+KERNEL_MORPH_FUNCTION(Ripple, Torus);
 
-KERNEL_MORPH_FUNCTION(DNAHelix, MobiusStrip);
-KERNEL_MORPH_FUNCTION(DNAHelix, MultiWave);
-KERNEL_MORPH_FUNCTION(DNAHelix, SphericalHarmonics);
-KERNEL_MORPH_FUNCTION(DNAHelix, Torus);
-KERNEL_MORPH_FUNCTION(DNAHelix, TorusKnot);
+KERNEL_MORPH_FUNCTION(Sphere, Wave);
+KERNEL_MORPH_FUNCTION(Sphere, MultiWave);
+KERNEL_MORPH_FUNCTION(Sphere, Ripple);
+KERNEL_MORPH_FUNCTION(Sphere, Torus);
 
-KERNEL_MORPH_FUNCTION(Torus, MobiusStrip);
+KERNEL_MORPH_FUNCTION(Torus, Wave);
 KERNEL_MORPH_FUNCTION(Torus, MultiWave);
-KERNEL_MORPH_FUNCTION(Torus, SphericalHarmonics);
-KERNEL_MORPH_FUNCTION(Torus, DNAHelix);
-KERNEL_MORPH_FUNCTION(Torus, TorusKnot);
-
-KERNEL_MORPH_FUNCTION(TorusKnot, MobiusStrip);
-KERNEL_MORPH_FUNCTION(TorusKnot, MultiWave);
-KERNEL_MORPH_FUNCTION(TorusKnot, SphericalHarmonics);
-KERNEL_MORPH_FUNCTION(TorusKnot, DNAHelix);
-KERNEL_MORPH_FUNCTION(TorusKnot, Torus);
+KERNEL_MORPH_FUNCTION(Torus, Ripple);
+KERNEL_MORPH_FUNCTION(Torus, Sphere);

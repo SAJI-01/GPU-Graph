@@ -155,10 +155,10 @@ MonoBehaviour:
   computeShader: {fileID: 7200000, guid: 516141bf1440b994abdbfbbabb32a5e1, type: 3}
   material: {fileID: -876546973899608171, guid: 1c6760d95b07e7742ad2b563b9c10e04, type: 3}
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  resolution: 87
+  resolution: 500
   function: 0
   transitionMode: 0
-  functionDuration: 4
+  functionDuration: 1
   transitionDuration: 1
 --- !u!4 &144417439
 Transform:
@@ -407,7 +407,6 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
-  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -455,7 +454,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 100
+  far clip plane: 1000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -533,20 +532,6 @@ MonoBehaviour:
     mipBias: 0
     varianceClampScale: 0.9
     contrastAdaptiveSharpening: 0
---- !u!114 &963194230
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3f11fe4bdc98df448a048f3e7dd89c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 10
-  lookAt: {fileID: 144417437}
 --- !u!1 &1460519335
 GameObject:
   m_ObjectHideFlags: 0
@@ -721,10 +706,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointPrefab: {fileID: 6735985778821533031, guid: deb375049641b5045a47a7cf1d32fc09, type: 3}
-  resolution: 101
+  resolution: 50
   function: 0
   transitionMode: 1
-  functionDuration: 10.05
+  functionDuration: 1
   transitionDuration: 1
 --- !u!4 &1866478910
 Transform:
